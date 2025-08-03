@@ -2,7 +2,9 @@ const { sequelize } = require('../config/database');
 const User = require('./User');
 const CompanyProfile = require('./CompanyProfile');
 const JobSeekerProfile = require('./JobSeekerProfile');
+const Job = require('./Job');
 
+ 
 // Define associations
 // User to CompanyProfile (One-to-One)
 User.hasOne(CompanyProfile, {
@@ -30,10 +32,11 @@ JobSeekerProfile.belongsTo(User, {
   as: 'user'
 });
 
-// Export models and sequelize instance
+// ✅ Export Job model too
 module.exports = {
   sequelize,
   User,
   CompanyProfile,
-  JobSeekerProfile
+  JobSeekerProfile,
+  Job  // ✅ EXPORT IT
 };

@@ -8,7 +8,8 @@ require('dotenv').config();
 const { sequelize } = require('./models');
 const authRoutes = require('./routes/auth');
 const userRoutes = require('./routes/users');
-
+const suggestRoutes = require('./routes/suggest');
+const jobSearchRoutes = require('./routes/jobRoutes'); 
 // Create Express app
 const app = express();
 
@@ -20,7 +21,8 @@ app.use(express.json());
 // API Routes
 app.use('/api/auth', authRoutes);
 app.use('/api/users', userRoutes);
-
+app.use('/api', suggestRoutes);
+app.use('/api/jobs', jobSearchRoutes); 
 // Health check endpoint
 app.get('/', (_, res) => res.status(200).json({ status: 'ok', message: 'Job Portal API is running' }));
 
