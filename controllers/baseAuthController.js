@@ -12,7 +12,7 @@ class BaseAuthController {
   generateToken(user) {
     return jwt.sign(
       { id: user.id, email: user.email, role: user.role },
-      process.env.JWT_SECRET || 'your_jwt_secret',
+      process.env.JWT_SECRET,
       { expiresIn: '24h' }
     );
   }

@@ -3,6 +3,7 @@ const User = require('./User');
 const CompanyProfile = require('./CompanyProfile');
 const JobSeekerProfile = require('./JobSeekerProfile');
 const Job = require('./Job');
+const AdminLog = require('./AdminLog');
 
  
 // Define associations
@@ -32,11 +33,28 @@ JobSeekerProfile.belongsTo(User, {
   as: 'user'
 });
 
-// ✅ Export Job model too
+// Set up associations for AdminLog (One-to-Many)
+User.hasMany(AdminLog, {
+  foreignKey: 'adminId',
+  as: 'adminLogs',
+  onDelete: 'CASCADE'
+});
+
+AdminLog.belongsTo(User, {
+  foreignKey: 'adminId',
+  as: 'admin'
+});
+
+// Export models and sequelize instance
+>>>>>>> Stashed changes
 module.exports = {
   sequelize,
   User,
   CompanyProfile,
   JobSeekerProfile,
+<<<<<<< Updated upstream
   Job  // ✅ EXPORT IT
+=======
+  AdminLog
+>>>>>>> Stashed changes
 };

@@ -105,11 +105,28 @@ User.prototype.validPassword = async function(password) {
 
 // Hash password before saving
 User.beforeSave(async (user, options) => {
+  // Prevent setting role to 'admin' through normal user creation/update
+  if (user.role === 'admin' && (!options || !options.isAdminCreation)) {
+    throw new Error('Admin role cannot be assigned through this operation');
+  }
+  
   if (user.changed('password_hash')) {
     const salt = await bcrypt.genSalt(10);
     user.password_hash = await bcrypt.hash(user.password_hash, salt);
   }
 });
+
+/**
+ * Static method to create an admin user (only for internal/direct DB use)
+ * This should only be used in secure contexts (migrations, seeds, or direct DB operations)
+ */
+User.createAdmin = async function(adminData) {
+  return this.create({
+    ...adminData,
+    role: 'admin',
+    status: 'active'
+  }, { isAdminCreation: true });
+};
 
 // Hook to ensure email is lowercase and trim whitespace
 User.beforeValidate((user, options) => {

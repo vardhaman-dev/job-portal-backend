@@ -22,7 +22,8 @@ app.use(express.json());
 app.use('/api/auth', authRoutes);
 app.use('/api/users', userRoutes);
 app.use('/api', suggestRoutes);
-app.use('/api/jobs', jobSearchRoutes); 
+app.use('/api/jobs', jobSearchRoutes);
+app.use('/api/admin', require('./routes/admin'));
 // Health check endpoint
 app.get('/', (_, res) => res.status(200).json({ status: 'ok', message: 'Job Portal API is running' }));
 
