@@ -45,16 +45,13 @@ AdminLog.belongsTo(User, {
   as: 'admin'
 });
 
-// Export models and sequelize instance
->>>>>>> Stashed changes
+
 module.exports = {
   sequelize,
   User,
   CompanyProfile,
   JobSeekerProfile,
-<<<<<<< Updated upstream
-  Job  // ✅ EXPORT IT
-=======
+  Job,
   AdminLog
->>>>>>> Stashed changes
+
 };
