@@ -1,5 +1,19 @@
 const { Sequelize } = require('sequelize');
-require('dotenv').config();
+require('dotenv').config(); // This loads decrypted env when running with dotenvx
+
+const fs = require('fs');
+
+// Convert port to number to avoid type issues
+const dbPort = Number(process.env.DB_PORT) || 3306;
+
+// Log decrypted env values for debugging (remove in production)
+console.log({
+  host: process.env.DB_HOST,
+  port: dbPort,
+  user: process.env.DB_USER,
+  dbName: process.env.DB_NAME,
+  ssl: process.env.DB_SSL
+});
 
 const sequelize = new Sequelize(
   process.env.DB_NAME,
@@ -7,7 +21,7 @@ const sequelize = new Sequelize(
   process.env.DB_PASSWORD,
   {
     host: process.env.DB_HOST,
-    port: process.env.DB_PORT || 3306,
+    port: dbPort,
     dialect: 'mysql',
     logging: process.env.NODE_ENV === 'development' ? console.log : false,
     define: {
@@ -17,16 +31,16 @@ const sequelize = new Sequelize(
     pool: {
       max: 5,
       min: 0,
-      acquire: 30000,
+      acquire: 60000, // Increase pool acquire timeout
       idle: 10000
     },
     dialectOptions: {
-      // For remote databases with SSL
+      connectTimeout: 30000, // 30 sec connect timeout
       ssl: process.env.DB_SSL === 'true' ? {
         require: true,
-        rejectUnauthorized: false
+        rejectUnauthorized: false,
+        // ca: fs.readFileSync('path/to/ca-certificate.crt'), // Uncomment if CA cert is needed
       } : false,
-      // Handle timezone issues
       typeCast: function (field, next) {
         if (field.type === 'DATETIME' || field.type === 'TIMESTAMP') {
           return field.string();
@@ -34,11 +48,10 @@ const sequelize = new Sequelize(
         return next();
       },
     },
-    timezone: '+00:00', // Use UTC
+    timezone: '+00:00', // UTC timezone
   }
 );
 
-// Test the connection
 const testConnection = async () => {
   try {
     await sequelize.authenticate();

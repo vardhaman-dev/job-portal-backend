@@ -3,7 +3,15 @@ const User = require('./User');
 const CompanyProfile = require('./CompanyProfile');
 const JobSeekerProfile = require('./JobSeekerProfile');
 const Job = require('./Job');
+
 const AdminLog = require('./AdminLog');
+const JobApplication = require('./JobApplication')(sequelize);
+// JobApplication associations
+Job.hasMany(JobApplication, { foreignKey: 'job_id', as: 'applications' });
+JobApplication.belongsTo(Job, { foreignKey: 'job_id', as: 'job' });
+
+User.hasMany(JobApplication, { foreignKey: 'job_seeker_id', as: 'jobApplications' });
+JobApplication.belongsTo(User, { foreignKey: 'job_seeker_id', as: 'jobSeeker' });
 
  
 // Define associations
@@ -52,6 +60,6 @@ module.exports = {
   CompanyProfile,
   JobSeekerProfile,
   Job,
-  AdminLog
-
+  AdminLog,
+  JobApplication
 };
