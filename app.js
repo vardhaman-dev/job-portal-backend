@@ -11,6 +11,7 @@ const userRoutes = require('./routes/users');
 const suggestRoutes = require('./routes/suggest');
 const jobSearchRoutes = require('./routes/jobRoutes'); 
 const applicationRoutes = require('./routes/application');
+const profileRoutes = require('./routes/profile');
 // Create Express app
 const app = express();
 
@@ -38,6 +39,8 @@ app.use((err, req, res, next) => {
     error: process.env.NODE_ENV === 'development' ? err.message : undefined
   });
 });
+
+app.use('/api', profileRoutes);
 
 // 404 handler
 app.use((req, res) => {

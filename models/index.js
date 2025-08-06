@@ -6,6 +6,8 @@ const Job = require('./Job');
 
 const AdminLog = require('./AdminLog');
 const JobApplication = require('./JobApplication')(sequelize);
+const UserEducation = require('./UserEducation');
+const UserExperience = require('./UserExperience');
 // JobApplication associations
 Job.hasMany(JobApplication, { foreignKey: 'job_id', as: 'applications' });
 JobApplication.belongsTo(Job, { foreignKey: 'job_id', as: 'job' });
@@ -40,6 +42,27 @@ JobSeekerProfile.belongsTo(User, {
   foreignKey: 'userId',
   as: 'user'
 });
+// JobSeekerProfile to Education (One-to-Many)
+JobSeekerProfile.hasMany(UserEducation, {
+  foreignKey: 'user_id',
+  as: 'education',
+  onDelete: 'CASCADE',
+});
+UserEducation.belongsTo(JobSeekerProfile, {
+  foreignKey: 'user_id',
+  as: 'jobSeeker',
+});
+
+// JobSeekerProfile to Experience (One-to-Many)
+JobSeekerProfile.hasMany(UserExperience, {
+  foreignKey: 'user_id',
+  as: 'experience',
+  onDelete: 'CASCADE',
+});
+UserExperience.belongsTo(JobSeekerProfile, {
+  foreignKey: 'user_id',
+  as: 'jobSeeker',
+});
 
 // Set up associations for AdminLog (One-to-Many)
 User.hasMany(AdminLog, {
@@ -61,5 +84,8 @@ module.exports = {
   JobSeekerProfile,
   Job,
   AdminLog,
-  JobApplication
+  JobApplication,
+  UserEducation,
+  UserExperience
 };
+
