@@ -1,6 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const { Job } = require('../models');
+const CompanyProfile = require('../models/CompanyProfile');
 const { searchJobsByQuery } = require('../controllers/jobSearchService');
 
 
@@ -70,9 +71,10 @@ function assignCategory(tags) {
 
 router.post('/jobs', async (req, res) => {
   const {
-    title, description, location, type, salary,
-    deadline, skills, status, company_id, tags
-  } = req.body;
+  title, description, location, type, salary,
+  deadline, skills, status, company_id, tags,
+  benefits, education        
+} = req.body;
 
   // Assign category
   const category = assignCategory(tags);
@@ -85,6 +87,9 @@ router.post('/jobs', async (req, res) => {
   location,
   type,
   salary_range: salary,
+  deadline,                 // ✅
+  benefits,
+  education,   
   status: 'open',
   skills: JSON.stringify(skills || []),  // <--- stringified
   tags: JSON.stringify(tags || []),      // <--- stringified
@@ -111,5 +116,66 @@ router.get('/search', async (req, res) => {
     res.status(500).json({ success: false, message: 'Search failed.' });
   }
 });
+Job.belongsTo(CompanyProfile, {
+  foreignKey: 'company_id',
+  targetKey: 'userId',
+  as: 'company'
+});
 
+router.get('/jobs/:id', async (req, res) => {
+  const jobId = req.params.id;
+
+  try {
+    const job = await Job.findOne({
+      where: { id: jobId },
+      include: [{
+        model: CompanyProfile,
+        as: 'company',
+        attributes: [
+          'companyName',
+          'logo',
+          'website',
+          'description',
+          'industry',
+          'location'
+        ]
+      }]
+    });
+
+    if (!job) {
+      return res.status(404).json({ success: false, error: 'Job not found' });
+    }
+
+    const jobData = job.toJSON();
+
+    // Parse TEXT → JSON
+    try {
+      if (typeof jobData.skills === 'string') {
+  try {
+    jobData.skills = JSON.parse(jobData.skills);
+  } catch {
+    jobData.skills = [];
+  }
+}
+
+    } catch { jobData.skills = []; }
+
+    try {
+      if (typeof jobData.tags === 'string') {
+  try {
+    jobData.tags = JSON.parse(jobData.tags);
+  } catch {
+    jobData.tags = [];
+  }
+}
+
+     
+    } catch { jobData.tags = []; }
+
+    res.json({ success: true, job: jobData });
+  } catch (err) {
+    console.error('Error fetching job:', err.message);
+    res.status(500).json({ success: false, error: 'Internal server error' });
+  }
+});
 module.exports = router;

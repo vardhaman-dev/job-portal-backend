@@ -8,7 +8,7 @@ router.get("/suggest/:userId", async (req, res) => {
 
     // 1. Get user skills
     const userResult = await sequelize.query(
-      "SELECT skills FROM user_skills_json WHERE user_id = ?",
+      "SELECT skills_json FROM job_seeker_profiles WHERE user_id = ?",
       { replacements: [userId], type: sequelize.QueryTypes.SELECT }
     );
 
@@ -16,7 +16,9 @@ router.get("/suggest/:userId", async (req, res) => {
       return res.status(404).json({ error: "User not found" });
     }
 
-    const userSkills = JSON.parse(userResult[0].skills || "[]");
+    const userSkills = JSON.parse(userResult[0].skills_json || "[]");
+    console.log("Raw skills from DB:", userResult[0].skills_json);
+
     if (!Array.isArray(userSkills) || userSkills.length === 0) {
       return res.status(400).json({ error: "User has no skills listed" });
     }
@@ -59,10 +61,24 @@ router.get("/suggest/:userId", async (req, res) => {
           if (Array.isArray(parsedSkills)) {
             jobTags = parsedSkills;
           } else {
-            jobTags = job.skills.split(',').map(s => s.trim());
+            if (typeof job.skills === "string") {
+  jobTags = job.skills.split(',').map(s => s.trim());
+} else if (Array.isArray(job.skills)) {
+  jobTags = job.skills;
+} else {
+  jobTags = [];
+}
+
           }
         } catch {
-          jobTags = job.skills.split(',').map(s => s.trim());
+          if (typeof job.skills === "string") {
+  jobTags = job.skills.split(',').map(s => s.trim());
+} else if (Array.isArray(job.skills)) {
+  jobTags = job.skills;
+} else {
+  jobTags = [];
+}
+
         }
       }
 
