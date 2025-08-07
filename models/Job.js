@@ -66,5 +66,12 @@ tags: {
   timestamps: false
 });
 
+Job.associate = (models) => {
+  Job.hasMany(models.Bookmark, {
+    foreignKey: 'job_id',
+    as: 'bookmarks'
+  });
+};
+
 
 module.exports = Job;

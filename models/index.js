@@ -3,11 +3,13 @@ const User = require('./User');
 const CompanyProfile = require('./CompanyProfile');
 const JobSeekerProfile = require('./JobSeekerProfile');
 const Job = require('./Job');
-
+const { DataTypes } = require('sequelize');
+const Bookmark = require('./Bookmark')(sequelize, DataTypes);
 const AdminLog = require('./AdminLog');
 const JobApplication = require('./JobApplication')(sequelize);
 const UserEducation = require('./UserEducation');
 const UserExperience = require('./UserExperience');
+
 // JobApplication associations
 Job.hasMany(JobApplication, { foreignKey: 'job_id', as: 'applications' });
 JobApplication.belongsTo(Job, { foreignKey: 'job_id', as: 'job' });
@@ -75,6 +77,18 @@ AdminLog.belongsTo(User, {
   foreignKey: 'adminId',
   as: 'admin'
 });
+// Bookmark belongs to Job
+Bookmark.belongsTo(Job, {
+  foreignKey: 'job_id',
+  as: 'job'
+});
+
+// Job includes CompanyProfile via User → This is optional chaining later
+Job.belongsTo(User, {
+  foreignKey: 'company_id',
+  as: 'companyUser'
+});
+
 
 
 module.exports = {
@@ -83,6 +97,7 @@ module.exports = {
   CompanyProfile,
   JobSeekerProfile,
   Job,
+  Bookmark,
   AdminLog,
   JobApplication,
   UserEducation,
