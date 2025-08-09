@@ -1,0 +1,13 @@
+[33mac048d7[m[33m ([m[1;36mHEAD[m[33m -> [m[1;32mfeature/backend-setup[m[33m, [m[1;31morigin/feature/backend-setup[m[33m)[m HEAD@{0}: reset: moving to HEAD
+[33mac048d7[m[33m ([m[1;36mHEAD[m[33m -> [m[1;32mfeature/backend-setup[m[33m, [m[1;31morigin/feature/backend-setup[m[33m)[m HEAD@{1}: pull origin main: Merge made by the 'ort' strategy.
+[33m3a06d4a[m HEAD@{2}: commit: Fix merge conflict
+[33md31a0c0[m HEAD@{3}: reset: moving to ORIG_HEAD
+[33m5a1adc6[m HEAD@{4}: pull origin main: Fast-forward
+[33md31a0c0[m HEAD@{5}: commit: Handled bookmarks
+[33mf7e4c22[m HEAD@{6}: commit: Add profile handling
+[33m6c8c655[m HEAD@{7}: commit: Update job posting form and added job description
+[33m9d4c9c4[m HEAD@{8}: pull: Fast-forward
+[33m3ed76a6[m HEAD@{9}: commit: Removed the bug
+[33m922cf8f[m HEAD@{10}: pull origin feature/backend-setup: Fast-forward
+[33m7faeb75[m HEAD@{11}: commit: Add job search and suggest routes,post job update app and models
+[33mb655ca8[m HEAD@{12}: clone: from https://github.com/vardhaman-dev/job-backend.git
