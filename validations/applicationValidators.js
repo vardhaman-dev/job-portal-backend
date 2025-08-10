@@ -1,7 +1,15 @@
 const { body } = require('express-validator');
 
 exports.applyJobValidator = [
-  body('job_id').isInt().withMessage('Job ID is required and must be an integer'),
-  body('cover_letter').optional().isString(),
-  body('resume_link').optional().isString().isURL().withMessage('Resume link must be a valid URL'),
+  body('job_id')
+    .exists().withMessage('Job ID is required')
+    .bail()
+    .isInt().withMessage('Job ID must be an integer')
+    .toInt(),
+
+  body('cover_letter')
+    .optional()
+    .isString().withMessage('Cover letter must be a string'),
+    
+  // Remove resume_link validation as you upload file instead
 ];

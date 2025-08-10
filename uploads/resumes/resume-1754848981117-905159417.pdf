@@ -1,0 +1,30 @@
+{
+  "document_type": "customer_data",
+  "customers": [
+    {
+      "id": "CUST001",
+      "name": "Alice Johnson",
+      "email": "alice@example.com",
+      "phone": "+1-555-0123",
+      "address": {
+        "street": "456 Oak Ave",
+        "city": "Springfield",
+        "state": "IL",
+        "zip": "62701"
+      },
+      "orders": [
+        {
+          "order_id": "ORD001",
+          "date": "2024-01-10",
+          "total": 299.99,
+          "items": ["laptop", "mouse"]
+        }
+      ]
+    }
+  ],
+  "metadata": {
+    "generated_date": "2024-01-15",
+    "version": "1.0",
+    "total_customers": 1
+  }
+}

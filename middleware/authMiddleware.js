@@ -2,85 +2,42 @@ const jwt = require('jsonwebtoken');
 const { User } = require('../models');
 const jwtConfig = require('../config/jwt');
 
-/**
- * Middleware to check if user is authenticated
- */
 const isLoggedIn = async (req, res, next) => {
+  console.log('[AuthMiddleware] Start auth check');
   try {
-    // Get token from header
     const authHeader = req.header('Authorization');
+    console.log('[AuthMiddleware] Authorization header:', authHeader);
     if (!authHeader) {
-      return res.status(401).json({ 
-        success: false, 
-        message: 'No token, authorization denied' 
-      });
+      console.log('[AuthMiddleware] No Authorization header');
+      return res.status(401).json({ success: false, message: 'No token, authorization denied' });
     }
-    
-    // Extract token, handling different Bearer token formats
+
     let token = authHeader;
-    
-    // Debug logging before processing
-    console.log('Raw Authorization header:', authHeader);
-    
-    // Remove ALL 'Bearer ' prefixes if present (case insensitive)
-    if (token && typeof token === 'string') {
-      // This will remove all instances of 'Bearer ' at the start of the string
-      while (token.toLowerCase().startsWith('bearer ')) {
-        token = token.substring(7).trim();
-      }
-      console.log('After removing Bearer prefixes:', token.substring(0, 10) + '...');
+    while (token.toLowerCase().startsWith('bearer ')) {
+      token = token.substring(7).trim();
     }
-    
-    if (!token) {
-      console.error('No token found in Authorization header');
-      return res.status(401).json({ 
-        success: false, 
-        message: 'No authentication token provided' 
-      });
-    }
+    console.log('[AuthMiddleware] Token extracted:', token.substring(0, 20) + '...');
 
-    // Debug logging
-    console.log('Verifying token (first 10 chars):', token.substring(0, 10) + '...');
-    console.log('JWT_SECRET length:', jwtConfig.secret ? jwtConfig.secret.length : 'undefined');
-    console.log('Token length:', token.length);
-    
-    try {
-      // Verify token
-      console.log('Verifying with secret:', jwtConfig.secret ? '***' + jwtConfig.secret.slice(-4) : 'undefined');
-      const decoded = jwt.verify(token, jwtConfig.secret);
-      console.log('Token decoded successfully:', { id: decoded.id, email: decoded.email });
-      
-      // Find user and attach to request
-      const user = await User.findByPk(decoded.id, {
-        attributes: { exclude: ['password_hash'] }
-      });
-      
-      if (!user) {
-        return res.status(401).json({ 
-          success: false, 
-          message: 'Token is not valid' 
-        });
-      }
-      console.log('User found:', { id: user.id, email: user.email });
-      
-      // Attach user to request object
-      req.user = user;
-    } catch (verifyError) {
-      console.error('JWT verification failed:', verifyError.message);
-      console.error('Token:', token);
-      throw verifyError; // Re-throw to be caught by the outer catch
-    }
+    const decoded = jwt.verify(token, jwtConfig.secret);
+    console.log('[AuthMiddleware] Token decoded:', decoded);
 
-    // Continue to next middleware
+    const user = await User.findByPk(decoded.id);
+    if (!user) {
+      console.log('[AuthMiddleware] User not found');
+      return res.status(401).json({ success: false, message: 'Token is not valid' });
+    }
+    console.log('[AuthMiddleware] User found:', user.email);
+
+    req.user = user;
     next();
   } catch (error) {
-    console.error('Authentication error:', error);
-    res.status(401).json({ 
-      success: false, 
-      message: 'Token is not valid' 
-    });
+    console.error('[AuthMiddleware] Error:', error);
+    return res.status(401).json({ success: false, message: 'Token is not valid' });
   }
 };
+
+module.exports = { isLoggedIn };
+
 
 /**
  * Middleware to check if user is the owner or admin

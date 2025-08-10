@@ -20,13 +20,14 @@ module.exports = (sequelize) => {
       allowNull: true,
     },
     resume_link: {
-      type: DataTypes.STRING,
-      allowNull: true,
-    },
-    status: {
-      type: DataTypes.STRING,
-      defaultValue: 'applied',
-    },
+  type: DataTypes.STRING(512),
+  allowNull: true,
+},
+status: {
+  type: DataTypes.STRING(20),
+  defaultValue: 'applied',
+},
+
     applied_at: {
       type: DataTypes.DATE,
       defaultValue: DataTypes.NOW,
