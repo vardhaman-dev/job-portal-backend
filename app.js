@@ -39,7 +39,7 @@ app.use('/api/auth', authRoutes);
 app.use('/api/users', userRoutes);
 app.use('/api', suggestRoutes);
 app.use('/api/jobs', jobSearchRoutes);
-app.use('/api', applicationRoutes);
+app.use('/api/applications', applicationRoutes);
 app.use('/api/bookmarks', bookmarkRoutes);
 app.use('/api/admin', require('./routes/admin'));
 

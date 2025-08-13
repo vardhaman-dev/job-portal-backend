@@ -5,7 +5,7 @@ const path = require('path');
 const { isLoggedIn } = require('../middleware/authMiddleware');
 const { applyJobValidator } = require('../validations/applicationValidators');
 const { validate } = require('../middleware/validationMiddleware');
-const { applyToJob } = require('../controllers/jobApplicationController');
+const { applyToJob, getMyApplications } = require('../controllers/jobApplicationController');
 
 // Add logging wrappers around middleware to detect hangs
 const logMiddleware = (name, fn) => (req, res, next) => {
@@ -61,5 +61,8 @@ router.post(
 
   applyToJob
 );
+
+// Get my applications
+router.get('/my-applications', isLoggedIn, getMyApplications);
 
 module.exports = router;

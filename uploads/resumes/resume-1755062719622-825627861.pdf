@@ -1,0 +1,5 @@
+name,age,email,status
+John Doe,30,john@example.com,active
+Jane Smith,25,jane@example.com,inactive
+Bob Johnson,35,bob@example.com,active
+Alice Brown,28,alice@example.com,active
