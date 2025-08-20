@@ -89,6 +89,19 @@ Job.belongsTo(User, {
   as: 'companyUser'
 });
 
+// Job to CompanyProfile (Many-to-One) via company_id - using unique alias
+Job.belongsTo(CompanyProfile, {
+  foreignKey: 'company_id',
+  targetKey: 'userId',
+  as: 'company'
+});
+
+CompanyProfile.hasMany(Job, {
+  foreignKey: 'company_id',
+  sourceKey: 'userId',
+  as: 'jobs'
+});
+
 
 
 module.exports = {

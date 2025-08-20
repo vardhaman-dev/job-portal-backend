@@ -8,7 +8,7 @@ const { searchJobsByQuery } = require('../controllers/jobSearchService');
 const CATEGORIES_TAGS = {
   "Information Technology": [
     "it", "software", "developer", "engineer", "technology", "java", "python", "cloud",
-    "data", "frontend", "backend", "react", "nodejs", "ai", "ml", "devops", "fullstack", "cybersecurity"
+    "data", "frontend", "backend", "react", "nodejs", "algorithms", "ml", "devops", "fullstack", "cybersecurity"
   ],
 
   "Marketing & Sales": [
@@ -69,6 +69,83 @@ function assignCategory(tags) {
   return maxMatches > 0 ? bestCategory : null;
 }
 
+// GET /jobs → Fetch all jobs
+router.get('/jobs', async (req, res) => {
+  try {
+    const { page = 1, limit = 10, category, location, type } = req.query;
+    const offset = (parseInt(page) - 1) * parseInt(limit);
+
+    const whereConditions = {
+      status: 'open' // Only show open jobs
+    };
+
+    // Add filters if provided
+    if (category) {
+      whereConditions.category = category;
+    }
+    if (location) {
+      whereConditions.location = { [require('sequelize').Op.iLike]: `%${location}%` };
+    }
+    if (type) {
+      whereConditions.type = type;
+    }
+
+    const jobs = await Job.findAndCountAll({
+      where: whereConditions,
+      include: [{
+        model: CompanyProfile,
+        as: 'company',
+        attributes: [
+          'companyName',
+          'logo',
+          'website',
+          'description',
+          'industry',
+          'location'
+        ]
+      }],
+      limit: parseInt(limit),
+      offset: offset,
+      order: [['createdAt', 'DESC']]
+    });
+
+    // Parse JSON strings for each job
+    const jobsWithParsedData = jobs.rows.map(job => {
+      const jobData = job.toJSON();
+      
+      // Parse skills and tags from string to array
+      try {
+        if (typeof jobData.skills === 'string') {
+          jobData.skills = JSON.parse(jobData.skills);
+        }
+      } catch {
+        jobData.skills = [];
+      }
+
+      try {
+        if (typeof jobData.tags === 'string') {
+          jobData.tags = JSON.parse(jobData.tags);
+        }
+      } catch {
+        jobData.tags = [];
+      }
+
+      return jobData;
+    });
+
+    res.json({
+      success: true,
+      jobs: jobsWithParsedData,
+      totalJobs: jobs.count,
+      currentPage: parseInt(page),
+      totalPages: Math.ceil(jobs.count / parseInt(limit))
+    });
+  } catch (err) {
+    console.error('Error fetching jobs:', err.message);
+    res.status(500).json({ success: false, error: 'Failed to fetch jobs' });
+  }
+});
+
 router.post('/jobs', async (req, res) => {
   const {
   title, description, location, type, salary,
@@ -115,11 +192,6 @@ router.get('/search', async (req, res) => {
     console.error('Search Error:', err.message);
     res.status(500).json({ success: false, message: 'Search failed.' });
   }
-});
-Job.belongsTo(CompanyProfile, {
-  foreignKey: 'company_id',
-  targetKey: 'userId',
-  as: 'company'
 });
 
 router.get('/jobs/:id', async (req, res) => {

@@ -21,7 +21,9 @@ const suggestRoutes = require('./routes/suggest');
 const jobSearchRoutes = require('./routes/jobRoutes'); 
 const applicationRoutes = require('./routes/application');
 const profileRoutes = require('./routes/profile');
-const bookmarkRoutes = require('./routes/bookmark'); 
+const bookmarkRoutes = require('./routes/bookmark');
+const recommendationRoutes = require('./routes/recommendations');
+const resumeBuilderRoutes = require('./routes/resumeBuilder'); 
 
 // Create Express app
 const app = express();
@@ -41,6 +43,8 @@ app.use('/api', suggestRoutes);
 app.use('/api/jobs', jobSearchRoutes);
 app.use('/api/applications', applicationRoutes);
 app.use('/api/bookmarks', bookmarkRoutes);
+app.use('/api/recommendations', recommendationRoutes);
+app.use('/api/resume-builder', resumeBuilderRoutes);
 app.use('/api/admin', require('./routes/admin'));
 
 // Health check endpoint
