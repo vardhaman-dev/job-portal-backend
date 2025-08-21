@@ -5,10 +5,10 @@ class AIService {
     // Updated API key for better performance
     this.apiKey = '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';
     this.baseURL = 'https://openrouter.ai/api/v1/chat/completions';
-    this.model = 'openai/gpt-oss-20b:free'; // Free OpenAI model
+    this.model = 'meta-llama/llama-3.2-3b-instruct:free'; // Try different free model
     this.fallbackModels = [
-      'meta-llama/llama-3.2-3b-instruct:free',
       'qwen/qwen-2.5-7b-instruct:free',
+      'openai/gpt-oss-20b:free',
       'microsoft/wizardlm-2-8x22b:free',
       'nousresearch/hermes-3-llama-3.1-405b:free',
       'google/gemma-2-9b-it:free'
@@ -18,19 +18,17 @@ class AIService {
   cleanAIResponse(content) {
     // Remove all reasoning patterns from AI responses
     const reasoningPatterns = [
-      /^(We are targeting|The key skills|The user|We need to|Since the user|However|We should|The candidate|We want to).*?\./gm,
+      /^(We are targeting|The key skills|We need to|Since the user|However|We should|The candidate|We want to).*?\./gm,
       /^(I understand|Let me|Here is|Here's|Based on|According to|Given|Considering).*?\./gm,
-      /^(They want|So they want|This means|In this case|For this|The prompt).*?\./gm,
+      /^(This means|In this case|For this|The prompt).*?\./gm,
       /^(No explanation|Just the result|Just the|Only the|Simply|Basically).*?\./gm,
       /^\s*Sentence \d+:.*?\n/gm,
       /^\s*experience\s*$/gm,
       /^\s*Highlight.*?\n/gm,
       /We are writing.*?/g,
-      /The user has.*?/g,
       /Since the user.*?/g,
       /No explanation.*?/g,
       /Just the.*?/g,
-      /They want.*?/g,
       /So they.*?/g,
       /The prompt.*?/g,
       /We need to provide.*?/g,
@@ -38,6 +36,13 @@ class AIService {
     ];
 
     let cleaned = content;
+    
+    // Special case: if content starts with "The user wants a rewritten summary" or similar meta-commentary, remove it
+    if (content.toLowerCase().startsWith('the user wants') || content.toLowerCase().startsWith('they want')) {
+      console.log('⚠️ AI returned meta-commentary instead of actual content');
+      return content; // Return as-is, let fallback handle it
+    }
+
     reasoningPatterns.forEach(pattern => {
       cleaned = cleaned.replace(pattern, '').trim();
     });
@@ -47,7 +52,9 @@ class AIService {
       /(?:Summary:|Here's|Result:|Answer:)?\s*([A-Z][^.]*\.(?:\s*[A-Z][^.]*\.){0,2})/,
       /([A-Z][^.]*skills?[^.]*\.)/,
       /([A-Z][^.]*developer[^.]*\.)/,
-      /([A-Z][^.]*experience[^.]*\.)/
+      /([A-Z][^.]*experience[^.]*\.)/,
+      /([A-Z][^.]*manager[^.]*\.)/,
+      /([A-Z][^.]*professional[^.]*\.)/
     ];
 
     for (const pattern of contentPatterns) {
@@ -92,7 +99,7 @@ class AIService {
         messages: [
           {
             role: 'system',
-            content: 'You are a professional resume writer. Respond ONLY with the requested content. NO explanations, NO reasoning, NO "here is" or "the user wants". Start immediately with the actual result.'
+            content: 'You are a resume writer. Write professional summaries directly. Examples:\n\nInput: Frontend Developer, React, 3 years\nOutput: Frontend Developer with 3+ years experience in React development, passionate about creating intuitive user interfaces. Skilled in modern JavaScript frameworks and responsive design principles.\n\nNow write only the summary for the given input:'
           },
           {
             role: 'user',
@@ -334,41 +341,80 @@ Create 2 sentences showing expertise and value. Start immediately:`;
     const company = jobDetails?.company?.companyName || jobDetails?.company || 'the company';
     const topSkills = skills.slice(0, 2).join(', ');
     
-    const prompt = `Rewrite this summary for ${jobTitle} at ${company}:
-"${currentSummary}"
+    const prompt = `${jobTitle} at ${company}, ${experience} years experience, skills: ${topSkills}
 
-Make it:
-- Personal to this role
-- Use skills: ${topSkills}
-- ${experience} years experience
-- 2 sentences max
-- Professional tone
-
-New summary:`;
+Write 2-sentence professional summary:`;
 
     try {
-      const result = await this.generateContent(prompt, 45); // Minimal tokens for efficiency
+      const result = await this.generateContent(prompt, 60); // Slightly more tokens
       
-      // Clean any template-like language
-      const cleaned = result
-        .replace(/Results-driven|Accomplished|Experienced/g, '')
-        .replace(/Strong track record|Proven track record/g, '')
-        .replace(/bringing \d+ years/g, '')
-        .replace(/with \d+\+ years/g, '')
-        .trim();
+      console.log('Raw AI response:', result.substring(0, 100) + '...');
       
-      if (cleaned.length > 20 && !cleaned.includes('template') && !cleaned.includes('hardcoded')) {
-        console.log('✅ Genuine AI summary generated');
+      // Multiple extraction strategies
+      let extractedSummary = null;
+      
+      // Strategy 1: Direct content (starts with job title or professional words)
+      if (result.match(/^(Frontend|Backend|Full Stack|Software|Senior|Junior|Developer|Engineer|Manager)/i)) {
+        extractedSummary = result;
+      }
+      
+      // Strategy 2: Extract from common AI patterns
+      if (!extractedSummary) {
+        const patterns = [
+          /(?:Summary:|Professional summary:|Here's|Output:)\s*([A-Z].*?\.(?:\s*[A-Z].*?\.)?)/i,
+          /([A-Z][^.]*(?:Engineer|Developer|Manager)[^.]*\.(?:\s*[A-Z][^.]*\.)?)/i,
+          /([A-Z][^.]*(?:experience|years|skills)[^.]*\.(?:\s*[A-Z][^.]*\.)?)/i,
+          /([A-Z][^.]*(?:React|Frontend|Backend)[^.]*\.(?:\s*[A-Z][^.]*\.)?)/i
+        ];
+        
+        for (const pattern of patterns) {
+          const match = result.match(pattern);
+          if (match && match[1] && match[1].length > 25) {
+            extractedSummary = match[1].trim();
+            console.log('✅ Extracted using pattern matching');
+            break;
+          }
+        }
+      }
+      
+      // Strategy 3: Split sentences and find professional ones
+      if (!extractedSummary) {
+        const sentences = result.split(/\.\s+/).filter(sentence => {
+          const trimmed = sentence.trim();
+          return trimmed.length > 20 && 
+                 !trimmed.toLowerCase().includes('the user') &&
+                 !trimmed.toLowerCase().includes('we need') &&
+                 (trimmed.includes('Engineer') || trimmed.includes('Developer') || 
+                  trimmed.includes('experience') || trimmed.includes('skills'));
+        });
+        
+        if (sentences.length > 0) {
+          extractedSummary = sentences.slice(0, 2).join('. ') + '.';
+          console.log('✅ Extracted using sentence filtering');
+        }
+      }
+      
+      if (extractedSummary && extractedSummary.length > 30) {
+        // Clean up the extracted summary
+        const cleaned = extractedSummary
+          .replace(/^(Results-driven|Accomplished|Experienced)\s+/i, '')
+          .replace(/Strong track record|Proven track record/gi, '')
+          .trim();
+        
+        console.log('✅ Successfully extracted AI summary');
         return cleaned;
       } else {
-        throw new Error('AI response too template-like');
+        throw new Error('Could not extract valid summary from AI response');
       }
-    } catch (error) {
-      console.warn('AI summary failed, using minimal approach');
       
-      // Minimal fallback - not a template, just basic structure
-      const skills_text = topSkills ? ` specializing in ${topSkills}` : '';
-      return `${jobTitle}${skills_text} focused on delivering value to ${company}. Ready to contribute technical expertise and drive meaningful results.`;
+    } catch (error) {
+      console.warn('AI summary extraction failed, using smart template');
+      
+      // High-quality template fallback
+      const skillsText = topSkills ? ` specializing in ${topSkills}` : '';
+      const expText = experience > 0 ? `${experience}+ years ` : '';
+      
+      return `${expText}${jobTitle}${skillsText} passionate about creating innovative solutions for ${company}. Dedicated to delivering high-quality code and exceptional user experiences.`;
     }
   }
 
